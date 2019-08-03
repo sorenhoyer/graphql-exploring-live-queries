@@ -9,11 +9,23 @@ import { createServer } from 'http';
 import { execute, subscribe } from 'graphql';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 
-import getStoreInstance, { initialState } from './store';
+import getStoreInstance from './store';
 import { subscribeToLiveData } from 'graphql-live-subscriptions'
 import schemaString from './schemaString'
 
 const store = getStoreInstance();
+
+setTimeout(() => {
+  let nextState = store.state
+  nextState = nextState
+    .updateIn(['jedis'], (jedis) => {
+      // eslint-disable-next-line
+      jedis[0] = jedis[0].set('id', 'a_different_id')
+      return [...jedis]
+    })
+  console.log(nextState)
+  store.eventEmitter.emit('update', { nextState }) // where to emit this event?????
+}, 10000);
 
 const resolvers = {
   // graphql-live-subscriptions requires a JSON Scalar resolver
@@ -25,6 +37,8 @@ const resolvers = {
       subscribe: subscribeToLiveData({
         initialState: (source, args, context) => {
           console.log("initialState");
+          console.log(source) // is always undefined
+          console.log(args)
           console.log(context)
           return store.state;
         },
@@ -32,7 +46,7 @@ const resolvers = {
           console.log("eventEmitter");
           console.log(source) // is always undefined
           console.log(args)
-          console.log(context)
+          console.log(store)
           return store.eventEmitter;
         },
         sourceRoots: {
@@ -98,24 +112,6 @@ server.listen(4000, () => {
       execute,
       subscribe,
       schema,
-      onConnect: (message, params, webSocket) => {
-        if(isFirstRun) {
-          // I know this is a terrible approach, but how to simulate an update that i verifyable from http://localhost:4000/playground?
-          setTimeout(() => {
-            let nextState = store.state
-            nextState = nextState
-              .updateIn(['jedis'], (jedis) => {
-                // eslint-disable-next-line
-                jedis[0] = jedis[0].set('id', 'a_different_id')
-                return [...jedis]
-              })
-            console.log(nextState)
-            store.eventEmitter.emit('update', { nextState }) // where to emit this event?????
-          }, 10000);
-          isFirstRun = true;
-        }
-        return { ...params, context: { store } }
-      },
     },
     {
       server: server,
