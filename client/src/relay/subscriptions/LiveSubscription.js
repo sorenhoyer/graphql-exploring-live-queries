@@ -29,6 +29,8 @@ export default () => {
       variables,
       updater: store => {
         console.log(store)
+        const rootField = store.getRootField('live');
+        console.log(rootField)
         // Here goes some jsonpatch magic???
       },
       // optional but recommended:
