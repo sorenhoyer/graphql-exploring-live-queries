@@ -1,0 +1,41 @@
+scalar JSON
+
+type RFC6902Operation {
+  op: String!
+  path: String!
+  from: String
+  value: JSON
+}
+
+type House {
+  id: ID!
+  address(includePostalCode: Boolean!): String!
+  numberOfCats: Int!
+  numberOfDogs: Int!
+}
+
+type Jedi {
+  id: ID!
+  name: String!
+  primaryAddress: House
+  houses: [House!]!
+}
+
+type Query {
+  # houses: [House!]!
+  jedis: [Jedi!]!
+}
+
+type LiveQuery {
+  # houses: [House!]!
+  jedis: [Jedi!]!
+}
+
+type Live {
+  query: LiveQuery
+  patch: [RFC6902Operation]
+}
+
+type Subscription {
+  live: Live
+}
