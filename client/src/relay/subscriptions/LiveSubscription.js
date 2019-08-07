@@ -38,6 +38,8 @@ export default () => {
         // const jedis = store.getRoot().getLinkedRecords('jedis');
         // applyOperation(jedis, patch, true, true);
 
+        // Do we need to code our own relay jsonpatch library?
+
         console.log(rootField)
         console.log(patch);
 
