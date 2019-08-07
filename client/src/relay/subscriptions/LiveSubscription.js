@@ -1,4 +1,4 @@
-import { applyOperation } from '../../jsonpatch'
+import { applyPatch } from '../../jsonpatch'
 import { graphql, requestSubscription } from 'react-relay';
 import environment from '../../environment';
 
@@ -38,7 +38,7 @@ export default () => {
 
         // Here goes some jsonpatch magic???
 
-        applyOperation(store, patch);
+        if (store && patch) applyPatch(store, patch);
 
         // Do we need to code our own relay jsonpatch-relays library?
       },
