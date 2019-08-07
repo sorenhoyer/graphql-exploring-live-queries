@@ -1,4 +1,4 @@
-import { applyOperation } from 'fast-json-patch'
+import { applyOperation } from '../../jsonpatch'
 import { graphql, requestSubscription } from 'react-relay';
 import environment from '../../environment';
 
@@ -30,20 +30,17 @@ export default () => {
       variables,
       updater: store => {
         console.log(store)
+        console.log(environment)
         const rootField = store.getRootField('live');
         const patch = rootField.getLinkedRecords('patch');
-
-        // Here goes some jsonpatch magic???
-
-        // const jedis = store.getRoot().getLinkedRecords('jedis');
-        // applyOperation(jedis, patch, true, true);
-
-        // Do we need to code our own relay jsonpatch library?
-
         console.log(rootField)
         console.log(patch);
 
-        // console.log(jedis)
+        // Here goes some jsonpatch magic???
+
+        applyOperation(store, patch);
+
+        // Do we need to code our own relay jsonpatch-relays library?
       },
       // optional but recommended:
       onCompleted: () => {/* server closed the subscription */ },
