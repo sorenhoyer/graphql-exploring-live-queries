@@ -24,6 +24,7 @@
     "graphql-tools": "^4.0.5",
     "graphql-type-json": "^0.3.0",
     "immutable": "^4.0.0-rc.12",
+    "pg-promise": "^9.0.0",
     "subscriptions-transport-ws": "^0.9.16"
   },
   "devDependencies": {

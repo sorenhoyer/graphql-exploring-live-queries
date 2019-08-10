@@ -20,16 +20,13 @@ const schemaString = `
 
   type House {
     id: ID!
-    address(includePostalCode: Boolean!): String!
-    numberOfCats: Int!
-    numberOfDogs: Int!
+    address: String!
   }
 
   type Jedi {
     id: ID!
     name: String!
-    primaryAddress: House
-    houses: [House!]!
+    house: House
   }
 `
 

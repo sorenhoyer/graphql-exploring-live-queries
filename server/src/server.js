@@ -1,5 +1,6 @@
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import EventEmitter from 'events'
 import express from 'express';
 import graphqlHTTP from 'express-graphql';
 import expressPlayground from 'graphql-playground-middleware-express';
@@ -11,9 +12,13 @@ import { SubscriptionServer } from 'subscriptions-transport-ws';
 
 import getStoreInstance from './store';
 import { subscribeToLiveData } from 'graphql-live-subscriptions'
-import schemaString from './schemaString'
+import schemaString from './schemaString';
+import { getHouses, getHouseById } from './database/house';
+import { getJedis } from './database/jedi';
 
 const store = getStoreInstance();
+
+const eventEmitter = new EventEmitter();
 
 setTimeout(() => {
   let nextState = store.state
@@ -24,7 +29,7 @@ setTimeout(() => {
       return [...jedis]
     })
   console.log(nextState)
-  store.eventEmitter.emit('update', { nextState }) // where to emit this event?????
+  /* store. */eventEmitter.emit('update', { nextState }) // where to emit this event?????
 }, 10000);
 
 const resolvers = {
@@ -35,53 +40,59 @@ const resolvers = {
     live: {
       resolve: source => source, // is always undefined
       subscribe: subscribeToLiveData({
-        initialState: (source, args, context) => {
+        initialState: async (source, args, context) => {
           console.log("initialState");
           console.log(source) // is always undefined
           console.log(args)
           console.log(context)
-          return store.state;
+          const houses = await getHouses();
+          const jedis = await getJedis();
+          return {
+            houses, jedis
+          }
         },
         eventEmitter: (source, args, context) => {
           console.log("eventEmitter");
           console.log(source) // is always undefined
           console.log(args)
-          console.log(store)
-          return store.eventEmitter;
+          // console.log(store)
+          // return store.eventEmitter;
+          return eventEmitter;
         },
-        sourceRoots: {
-          Jedi: ['houses'],
-        },
+        // sourceRoots: {
+        //   Jedi: ['houses'],
+        // },
       }),
     },
   },
   Query: {
-    houses: (jedi, args, context) => {
-      const { state } = store
+    houses: async (jedi, args, context) => {
+      // const { state } = store
 
-      return state.houses
+      // return state.houses
+      return await getHouses();
     },
-    jedis: (jedi, args, context) => {
-      const { state } = store
+    jedis: async(jedi, args, context) => {
+      // const { state } = store
 
-      return state.jedis
+      // return state.jedis
+      return await getJedis();
     },
   },
   House: {
     address: (house, args) => {
-      if (args.includePostalCode) {
-        return `${house.address} ${house.postalCode}`
-      }
       return house.address
     },
   },
   Jedi: {
-    houses: (jedi, args, context) => {
-      const { state } = store
+    house: async (jedi, args, context) => {
+      console.log("SDFKSDLFKSLDFKS ", jedi.house_id)
+      // const { state } = store
 
-      return jedi.houseIDs.map(id => (
-        state.houses.find(house => house.id === id)
-      ))
+      // return jedi.houseIDs.map(id => (
+      //   state.houses.find(house => house.id === id)
+      // ))
+      return await getHouseById(jedi.house_id);
     },
   },
 }
@@ -103,8 +114,6 @@ app.use('/graphql', cors(), bodyParser.json(), graphqlHTTP((request, response, g
 }));
 app.get('/playground', expressPlayground({ endpoint: '/graphql', subscriptionEndpoint: 'ws://localhost:4000/subscriptions' }));
 // app.listen(4000)
-
-let isFirstRun = true;
 
 server.listen(4000, () => {
   new SubscriptionServer(
